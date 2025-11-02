@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>R2 Video Hızlı Test</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
+    .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    input[type="text"] { flex:1; min-width:320px; padding:10px; border:1px solid #ccc; border-radius:8px; }
+    button { padding:10px 16px; border:0; border-radius:8px; cursor:pointer; }
+    #log { white-space:pre-wrap; font-size:14px; color:#444; background:#f7f7f7; padding:12px; border-radius:8px; border:1px solid #eee; }
+    video { width:100%; max-width:800px; aspect-ratio:16/9; background:#000; border-radius:12px; }
+    small { color:#666; }
+  </style>
+</head>
+<body>
+  <h1>Cloudflare R2 Video Test</h1>
+
+  <div class="row">
+    <input id="url" type="text" placeholder="Buraya Public Development URL'ini yapıştır (https://pub-...r2.dev/video/xxx.mp4)" />
+    <button id="playBtn">Play</button>
+  </div>
+  <p><small>Not: Buraya <b>paneldeki gri kutudan birebir kopyaladığın</b> <code>https://pub-...r2.dev/...</code> adresini yapıştır.</small></p>
+
+  <video id="player" controls playsinline preload="metadata"></video>
+
+  <h3>Olay Günlüğü</h3>
+  <div id="log"></div>
+
+  <script>
+    const $ = sel => document.querySelector(sel);
+    const player = $('#player');
+    const log = msg => { const d=new Date().toLocaleTimeString(); $('#log').textContent += `[${d}] ${msg}\n`; };
+
+    // Bazı yararlı event’ler
+    ['loadstart','durationchange','canplay','canplaythrough','playing','pause','waiting','ended','error','stalled','suspend'].forEach(ev=>{
+      player.addEventListener(ev, () => {
+        if (ev === 'error') {
+          const e = player.error;
+          log(`ERROR: code=${e?.code ?? '-'} (MEDIA_ERR_ABORTED=1, NETWORK=2, DECODE=3, SRC_NOT_SUPPORTED=4)`);
+        } else {
+          log(ev);
+        }
+      });
+    });
+
+    $('#playBtn').addEventListener('click', () => {
+      const url = $('#url').value.trim();
+      if (!url) { alert('Önce URL yapıştır.'); return; }
+      // MP4 olduğunu belirtmek iyi olur
+      player.src = url;
+      player.type = 'video/mp4';
+      player.load();
+      player.play().catch(err => log('Autoplay engellendi veya hata: ' + err));
+      log('Kaynak yüklendi: ' + url);
+    });
+
+    // İstersen otomatik deneme için buraya kendi URL’ni yaz:
+    // $('#url').value = 'https://pub-XXXX.r2.dev/video/bisikletliyi_gecme.mp4';
+  </script>
+</body>
+</html>
